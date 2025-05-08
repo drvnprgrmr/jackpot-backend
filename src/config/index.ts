@@ -14,7 +14,7 @@ export function configuration() {
   const config: Config = {
     nodeEnv,
     port: parseInt(env.PORT as string) || 3010,
-    mongoUri: env.MONGO_URI || `mongodb://127.0.0.1:27010/${APP_NAME}`,
+    mongoUri: env.MONGO_URI || `mongodb://127.0.0.1:27017/${APP_NAME}`,
   };
 
   return config;
