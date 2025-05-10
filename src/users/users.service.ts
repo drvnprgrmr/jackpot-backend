@@ -12,13 +12,13 @@ import {
 export class UsersService {
   constructor(@InjectModel(User.name) readonly userModel: Model<User>) {}
 
-  async getUserById(id: Types.ObjectId) {
+  async getUserById(id: Types.ObjectId | string) {
     const user = await this.userModel.findById(id).exec();
 
     return user;
   }
 
-  async getUserByIdOrThrow(id: Types.ObjectId) {
+  async getUserByIdOrThrow(id: Types.ObjectId | string) {
     const user = await this.userModel.findById(id).exec();
 
     if (!user) throw new UserNotFoundException();
