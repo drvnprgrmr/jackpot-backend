@@ -1,7 +1,9 @@
-import { Prop, Schema } from '@nestjs/mongoose';
-import { Card } from './card.schema';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Card, generateDeck } from './card.schema';
 import { Player } from './player.schema';
 import { Team } from './team.schema';
+import { generate } from 'random-words';
+import { HydratedDocument } from 'mongoose';
 
 export enum GameStatus {
   PENDING = 'pending',
@@ -9,9 +11,17 @@ export enum GameStatus {
   ENDED = 'ended',
 }
 
+export type GameDocument = HydratedDocument<Game>;
+
 @Schema({ timestamps: true })
 export class Game {
-  @Prop({ type: String })
+  @Prop({
+    type: String,
+    required: true,
+    unique: true,
+    immutable: true,
+    default: () => generate({ exactly: 3, maxLength: 5, join: '-' }),
+  })
   roomName: string;
 
   @Prop({ type: [Player] })
@@ -24,7 +34,7 @@ export class Game {
   teams: Team[];
 
   // face down cards you draw from
-  @Prop({ type: [Card] })
+  @Prop({ type: [Card], default: generateDeck })
   drawPile: Card[];
 
   // face up cards you play on
@@ -39,3 +49,5 @@ export class Game {
   })
   status: GameStatus;
 }
+
+export const GameSchema = SchemaFactory.createForClass(Game);

@@ -27,11 +27,13 @@ import { Config } from 'src/config';
             issuer: jwtConfig.issuer,
             audience: jwtConfig.audience,
           },
+          global: true,
         };
       },
     }),
   ],
   controllers: [AuthController],
   providers: [AuthService],
+  exports: [JwtModule],
 })
 export class AuthModule {}
