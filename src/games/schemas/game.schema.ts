@@ -3,7 +3,7 @@ import { Card, generateDeck } from './card.schema';
 import { Player } from './player.schema';
 import { Team } from './team.schema';
 import { generate } from 'random-words';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types, Schema as MSchema } from 'mongoose';
 
 export enum GameStatus {
   PENDING = 'pending',
@@ -23,6 +23,14 @@ export class Game {
     default: () => generate({ exactly: 3, maxLength: 5, join: '-' }),
   })
   roomName: string;
+
+  @Prop({
+    type: MSchema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    immutable: true,
+  })
+  createdBy: Types.ObjectId;
 
   @Prop({ type: [Player] })
   players: Player[];
