@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Game, GameSchema, GameStatus } from './schemas/game.schema';
 import { UsersModule } from 'src/users/users.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { GamesGateway } from './games.gateway';
 
 @Module({
   imports: [
@@ -30,7 +31,7 @@ import { AuthModule } from 'src/auth/auth.module';
       },
     ]),
   ],
-  providers: [GamesService],
+  providers: [GamesService, GamesGateway],
   controllers: [GamesController],
 })
 export class GamesModule {}
