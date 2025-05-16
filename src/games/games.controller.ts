@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Query,
   Req,
@@ -25,5 +26,10 @@ export class GamesController {
   @Get()
   getGames(@Query() query: GetGamesDto) {
     return this.gamesService.getGames(query);
+  }
+
+  @Get(':nameOrId')
+  getGame(@Param('nameOrId') nameOrId: string) {
+    return this.gamesService.getGame(nameOrId);
   }
 }
