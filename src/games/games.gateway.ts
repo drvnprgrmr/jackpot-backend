@@ -12,11 +12,8 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { UsersService } from 'src/users/users.service';
-import { GamesGuard } from './games.guard';
 
 @WebSocketGateway()
-//@UseFilters(BaseWsExceptionFilter)
-//@UseGuards(GamesGuard)
 export class GamesGateway
   implements
     OnGatewayInit<Server>,
