@@ -11,7 +11,10 @@ export enum GameStatus {
   ENDED = 'ended',
 }
 
-export type GameDocument = HydratedDocument<Game>;
+export type GameDocument = HydratedDocument<
+  Game,
+  { teams: Types.DocumentArray<Team>; players: Types.DocumentArray<Player> }
+>;
 
 @Schema({ timestamps: true })
 export class Game {

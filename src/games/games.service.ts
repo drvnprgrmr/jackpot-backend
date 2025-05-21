@@ -1,13 +1,17 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateGameDto } from './dto/create-game.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Game } from './schemas/game.schema';
-import { FilterQuery, isValidObjectId, Model, Types } from 'mongoose';
+import { Game, GameDocument } from './schemas/game.schema';
+import { FilterQuery, isValidObjectId, Model } from 'mongoose';
 import { GetGamesDto } from './dto/get-games.dto';
 
 @Injectable()
 export class GamesService {
-  constructor(@InjectModel(Game.name) readonly gameModel: Model<Game>) {}
+  constructor(
+    @InjectModel(Game.name)
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    readonly gameModel: Model<Game, {}, {}, {}, GameDocument>,
+  ) {}
 
   async createGame(userId: string, dto: CreateGameDto) {
     const game = await this.gameModel.create({ ...dto, createdBy: userId });

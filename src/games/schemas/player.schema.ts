@@ -5,7 +5,7 @@ import { Card } from './card.schema';
 @Schema()
 export class Player {
   @Prop({ type: MSchema.Types.ObjectId, ref: 'User' })
-  user: Types.ObjectId;
+  user: Types.ObjectId | string;
 
   @Prop({ type: [Card] })
   cards: Card[];
