@@ -6,6 +6,8 @@ import { Game, GameSchema, GameStatus } from './schemas/game.schema';
 import { UsersModule } from 'src/users/users.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { GamesGateway } from './games.gateway';
+import { ConfigService } from '@nestjs/config';
+import { Config } from 'src/config';
 
 @Module({
   imports: [
@@ -14,17 +16,20 @@ import { GamesGateway } from './games.gateway';
     MongooseModule.forFeatureAsync([
       {
         name: Game.name,
-        useFactory() {
+        inject: [ConfigService],
+        useFactory(configService: ConfigService<Config, true>) {
           const schema = GameSchema;
 
-          // delete unplayed games after a day
-          schema.index(
-            { createdAt: 1 },
-            {
-              expires: '1d',
-              partialFilterExpression: { status: GameStatus.PENDING },
-            },
-          );
+          if (configService.get('nodeEnv') !== 'development') {
+            // delete unplayed games after a day
+            schema.index(
+              { createdAt: 1 },
+              {
+                expires: '1d',
+                partialFilterExpression: { status: GameStatus.PENDING },
+              },
+            );
+          }
 
           return schema;
         },

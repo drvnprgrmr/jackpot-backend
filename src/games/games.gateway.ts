@@ -17,6 +17,12 @@ import { Types } from 'mongoose';
 interface SocketData {
   userId: string;
   username: string;
+  gameInfo?: {
+    roomName: string;
+    playerId: string;
+    teamName: string;
+    teamId: string;
+  };
 }
 
 @WebSocketGateway()
@@ -67,7 +73,7 @@ export class GamesGateway
 
     socket.data = { userId: user.id as string, username: user.username };
 
-    this.logger.verbose('Client connected.', {
+    this.logger.log('Client connected.', {
       user: user.id as string,
       socket: socket.id,
     });
@@ -77,8 +83,10 @@ export class GamesGateway
     await this.handleAuth(socket);
   }
 
-  handleDisconnect(socket: Socket) {
-    this.logger.verbose('Socket disconnectd.', { socketId: socket.id });
+  async handleDisconnect(socket: Socket) {
+    // leave any game room the socket may be in
+    await this.leaveRoom(socket);
+    this.logger.log('Socket disconnectd.', { socketId: socket.id });
   }
 
   @SubscribeMessage('hello')
@@ -91,8 +99,11 @@ export class GamesGateway
   }
 
   @SubscribeMessage('join-room')
-  async onJoinRoom(socket: Socket, roomName: string) {
+  async joinRoom(socket: Socket, roomName: string) {
     const socketData = socket.data as SocketData;
+
+    if (socketData.gameInfo)
+      return { message: 'user is already in a room', status: 'error' };
 
     // get game room to be joined
     const game = await this.gamesService.gameModel
@@ -139,15 +150,57 @@ export class GamesGateway
     // save game
     await game.save();
 
-    // alert other room members on socket joining room
-    socket
-      .to(roomName)
-      .emit('join-room', { ...socketData, teamName: team.name });
-
-    return {
-      message: 'done',
-      status: 'success',
-      data: { teamName: team.name },
+    // add game info to socket data
+    socketData.gameInfo = {
+      roomName,
+      playerId: player.id as string,
+      teamName: team.name as string,
+      teamId: team.id as string,
     };
+
+    // alert other room members on socket joining room
+    socket.to(roomName).emit('join-room', socketData);
+
+    return { message: 'done', status: 'success', data: socketData };
+  }
+
+  @SubscribeMessage('leave-room')
+  async leaveRoom(socket: Socket) {
+    const socketData = socket.data as SocketData;
+    const gameInfo = socketData.gameInfo;
+
+    if (!gameInfo) return { message: 'user not in a game', status: 'error' };
+
+    // get game room to leave
+    const game = await this.gamesService.gameModel
+      .findOne({
+        roomName: gameInfo.roomName,
+        status: GameStatus.PENDING,
+      })
+      .exec();
+
+    // return if room is not available
+    if (!game) return { message: 'room is not available', status: 'error' };
+
+    // remove user from player list
+    game.players.pull(game.players.id(gameInfo.playerId));
+
+    // remove user from teams list
+    game.teams.pull(game.teams.id(gameInfo.teamId));
+
+    // remove the socket from the room
+    await socket.leave(gameInfo.roomName);
+
+    // save game
+    await game.save();
+
+    // alert other room members on socket leaving room
+    socket.to(gameInfo.roomName).emit('leave-room', socketData);
+
+    // unset the game info of the socket
+    delete socketData.gameInfo;
+
+    // return acknowledgment to socket
+    return { message: 'done', status: 'success', data: socketData };
   }
 }
